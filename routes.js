@@ -8,6 +8,7 @@ module.exports = function (app, myDataBase) {
       message: "Please log in",
       showLogin: true,
       showRegistration: true,
+      showSocialAuth: true,
     });
   });
 
@@ -61,6 +62,21 @@ module.exports = function (app, myDataBase) {
       res.redirect("/profile");
     }
   );
+
+  app.route("/auth/github").get(passport.authenticate("github"));
+  app
+    .route("/auth/github/callback")
+    .get(
+      passport.authenticate("github", { failureRedirect: "/" }),
+      (req, res) => {
+        req.session.user_id = req.user.id;
+        res.redirect("/chat");
+      }
+    );
+
+  app.route("/chat").get(ensureAuthenticated, (req, res) => {
+    res.render("chat", { user: req.user });
+  });
 
   app.use((req, res, next) => {
     res.status(404).type("text").send("Not Found");
